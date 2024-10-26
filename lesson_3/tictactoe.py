@@ -1,15 +1,16 @@
 import random
 import os
+import time
 
 INITIAL_MARKER = ' '
 USER_MARKER = 'X'
 COMPUTER_MARKER = 'O'
+NR_GAMES_TO_WIN_MATCH = 5
 
 def prompt(message):
     print(f'==> {message}')
 
 def display_board(board):
-    os.system('clear')
 
     prompt(f'You are {USER_MARKER}. Computer is {COMPUTER_MARKER}.')
     print('')
@@ -38,7 +39,7 @@ def empty_squares(board):
 def player_chooses_square(board):
     while True:
         valid_choices = [str(num) for num in empty_squares(board)]
-        prompt(f'Choose a square ({', '.join(valid_choices)}):')
+        prompt(f'Choose a square ({join_or(valid_choices)}):')
         square = input().strip()
         if square in valid_choices:
             break
@@ -47,6 +48,19 @@ def player_chooses_square(board):
 
     
     board[int(square)] = USER_MARKER
+
+def join_or(lst, delimiter=', ', final_delimiter='or'):
+    result = ''
+    
+    for element in lst[:-2]:
+        result += f'{element}{delimiter}'
+    if len(lst) > 1:
+        result += f'{lst[-2]} {final_delimiter} {lst[-1]}'
+    elif len(lst) == 1:
+        return str(lst[0])
+
+
+    return result
 
 def computer_chooses_square(board):
     if len(empty_squares(board)) == 0:
@@ -57,10 +71,10 @@ def computer_chooses_square(board):
 def board_full(board):
     return len(empty_squares(board)) == 0 # or return not empty_squares(board)
 
-def someone_won(board):
-    return bool(detect_winner(board))
+def someone_won_round(board):
+    return bool(detect_round_winner(board))
 
-def detect_winner(board):
+def detect_round_winner(board):
     winning_lines = [
         [1, 2, 3], [4, 5, 6], [7, 8, 9], # rows
         [1, 4, 7], [2, 5, 8], [3, 6, 9], # colums
@@ -80,30 +94,65 @@ def detect_winner(board):
         
     return None
 
+def display_score(score):
+    os.system('clear')
+    print(f"You: {score['Player']} | Computer: {score['Computer']}")
+
+def increment_score(score, board):
+    score[detect_round_winner(board)] += 1
+
+def detect_match_winner(score):
+    if score['Player'] == NR_GAMES_TO_WIN_MATCH:
+        return 'You'
+    elif score['Computer'] == NR_GAMES_TO_WIN_MATCH:
+        return 'Computer'
+    
+    return None
+
+def someone_won_match(score):
+    return bool(detect_match_winner(score))
+
+
 def play_tic_tac_toe():
     while True:
-        board = initialize_board()
-
+        score = {
+            'Player': 0,
+            'Computer': 0
+        }
         while True:
-            display_board(board)
-            player_chooses_square(board)
-            if someone_won(board) or board_full(board):
-                break
-            
-            computer_chooses_square(board)
-            if someone_won(board) or board_full(board):
-                break
-            
-        display_board(board)
+            board = initialize_board()
 
-        if someone_won(board):
-            prompt(f'{detect_winner(board)} won!')
-        else:
-            prompt("It's a tie!")
-        
+            while True:
+                display_score(score)
+                display_board(board)
+                player_chooses_square(board)
+                if someone_won_round(board) or board_full(board):
+                    break
+                
+                computer_chooses_square(board)
+                if someone_won_round(board) or board_full(board):
+                    break
+
+            display_score(score)            
+            display_board(board)
+
+            if someone_won_round(board):
+                prompt(f'{detect_round_winner(board)} won this round!')
+                increment_score(score, board)
+                time.sleep(1.5)
+            else:
+                prompt("You tied this round!")
+                time.sleep(2)
+            
+            if someone_won_match(score):
+                break
+            
+        display_score(score)        
+        prompt(f'{detect_match_winner(score)} won the match!')
+        time.sleep(1)     
         prompt('Play again? (y or n)')
         answer = input().strip().lower()
-
+        
         if answer[0] != 'y':
             break
 
