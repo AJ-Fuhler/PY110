@@ -7,6 +7,12 @@ USER_MARKER = 'X'
 COMPUTER_MARKER = 'O'
 NR_GAMES_TO_WIN_MATCH = 5
 
+WINNING_LINES = [
+        [1, 2, 3], [4, 5, 6], [7, 8, 9], # rows
+        [1, 4, 7], [2, 5, 8], [3, 6, 9], # colums
+        [1, 5, 9], [3, 5, 7]             # diagonals
+    ]
+
 def prompt(message):
     print(f'==> {message}')
 
@@ -27,6 +33,23 @@ def display_board(board):
     print('     |     |')
     print('')
 
+def find_at_risk_square(board):
+    for line in WINNING_LINES:
+        sq1, sq2, sq3 = line
+        if (board[sq1] == USER_MARKER
+            and board[sq2] == USER_MARKER
+            and board[sq3] == INITIAL_MARKER):
+            return sq3
+        if (board[sq1] == USER_MARKER
+            and board[sq2] == INITIAL_MARKER
+            and board[sq3] == USER_MARKER):
+            return sq2
+        if (board[sq1] == INITIAL_MARKER
+            and board[sq2] == USER_MARKER
+            and board[sq3] == USER_MARKER):
+            return sq1
+    
+    return None
 
 def initialize_board():
     return {square: INITIAL_MARKER for square in range(1, 10)}
@@ -65,7 +88,9 @@ def join_or(lst, delimiter=', ', final_delimiter='or'):
 def computer_chooses_square(board):
     if len(empty_squares(board)) == 0:
         return
-    square = random.choice(empty_squares(board))
+    square = find_at_risk_square(board)
+    if not square:
+        square = random.choice(empty_squares(board))
     board[square] = COMPUTER_MARKER
 
 def board_full(board):
@@ -75,13 +100,8 @@ def someone_won_round(board):
     return bool(detect_round_winner(board))
 
 def detect_round_winner(board):
-    winning_lines = [
-        [1, 2, 3], [4, 5, 6], [7, 8, 9], # rows
-        [1, 4, 7], [2, 5, 8], [3, 6, 9], # colums
-        [1, 5, 9], [3, 5, 7]             # diagonals
-    ]
 
-    for line in winning_lines:
+    for line in WINNING_LINES:
         sq1, sq2, sq3 = line
         if (board[sq1] == USER_MARKER
             and board[sq2] == USER_MARKER
