@@ -6,7 +6,7 @@ SUITS = ['Hearts', 'Diamonds', 'Spades', 'Clubs']
 RANKS = ['2', '3', '4', '5', '6', '7', '8', '9', '10',
          'Jack', 'Queen', 'King', 'Ace']
 MAX_TOTAL = 21
-MAX_TOTAL_FOR_DEALER_TURN = 17
+MAX_TOTAL_DEALER_TURN = 17
 
 def join_or(lst, delimiter=', ', final_delimiter='or'):
     result = ''
@@ -27,7 +27,9 @@ def prompt(message):
 def initialize_deck():
     deck = [f'{rank} of {suit}' for suit in SUITS
                          for rank in RANKS]
-    return random.shuffle(deck)
+    random.shuffle(deck)
+
+    return deck
 
 
 
@@ -70,7 +72,7 @@ def calculate_total(cards):
     total = 0
     if 'Ace' in cards:
         ace_index = cards.index('Ace')
-        cards.insert(-1, cards.pop(ace_index))
+        cards.append(cards.pop(ace_index))
     for card in cards:
         if card == 'Ace':
             if total <= 10:
@@ -103,6 +105,13 @@ def determine_winner(player_cards, dealer_cards):
 
     return None
 
+def display_totals(player_cards, dealer_cards):
+    player_total = calculate_total(player_cards)
+    dealer_total = calculate_total(dealer_cards)
+    prompt(f'You had a total of {player_total}.')
+    prompt(f'The dealer had a total of {dealer_total}.')
+
+
 
 def display_winner(player_cards, dealer_cards):
     winner = determine_winner(player_cards, dealer_cards)
@@ -115,62 +124,59 @@ def display_winner(player_cards, dealer_cards):
 
 def play_twenty_one():
     while True:
-        os.system('clear')
-        deck = initialize_deck()
-        player_cards = deal_cards(deck, 2)
-        dealer_cards = deal_cards(deck, 2)
-
         while True:
+            os.system('clear')
+            deck = initialize_deck()
+            player_cards = deal_cards(deck, 2)
+            dealer_cards = deal_cards(deck, 2)
             display_dealer_cards(dealer_cards)
-            display_player_cards(player_cards)
-            if busted(player_cards):
-                break
-            prompt('hit or stay? (h or s)')
-            answer = get_valid_answer(['hit', 'stay', 'h', 's'])
-
-            if answer == 'stay' or busted(player_cards):
-                break
-            player_cards += deal_cards(deck, 1)
-
-        if busted(player_cards):
-            prompt('You busted! The dealer won!')
-            time.sleep(1.5)
-            prompt('Play again? (y or n)')
-            answer = get_valid_answer(['y', 'n'])
-            if answer == 'n':
-                break
-
-        else:
-            prompt('You chose to stay!')
-            time.sleep(1.5)
-            prompt(f'Your total is {calculate_total(player_cards)}')
-            time.sleep(1.5)
             while True:
-                display_dealer_cards(dealer_cards, False)
-                time.sleep(1.5)
-                prompt(f'Dealer total: {calculate_total(dealer_cards)}')
-                time.sleep(1.5)
-                if calculate_total(dealer_cards) >= MAX_TOTAL_FOR_DEALER_TURN:
+                display_player_cards(player_cards)
+                prompt(f'Your total is {calculate_total(player_cards)}')
+                if busted(player_cards):
                     break
-                dealer_cards += deal_cards(deck, 1)
-                time.sleep(1.5)
+                prompt('hit or stay? (h or s)')
+                answer = get_valid_answer(['hit', 'stay', 'h', 's'])
 
-            if busted(dealer_cards):
-                prompt('The dealer busted! You won!')
-                time.sleep(1.5)
-                prompt('Play again? (y or n)')
-                answer = get_valid_answer(['y', 'n'])
-                if answer == 'n':
+                if answer in ['stay', 's'] or busted(player_cards):
                     break
+                player_cards += deal_cards(deck, 1)
+
+            if busted(player_cards):
+                prompt('You busted! The dealer won!')
+                time.sleep(1.5)
+                break
+
             else:
-                prompt('The dealer stayed.')
+                prompt('You chose to stay!')
                 time.sleep(1.5)
-                display_winner(player_cards, dealer_cards)
+                prompt(f'Your total is {calculate_total(player_cards)}')
                 time.sleep(1.5)
-                prompt('Play again? (y or n)')
-                answer = get_valid_answer(['y', 'n'])
-                if answer == 'n':
+                while True:
+                    display_dealer_cards(dealer_cards, False)
+                    prompt(f'Dealer total: {calculate_total(dealer_cards)}')
+                    time.sleep(1.5)
+                    if calculate_total(dealer_cards) >= MAX_TOTAL_DEALER_TURN:
+                        break
+                    dealer_cards += deal_cards(deck, 1)
+                    time.sleep(1.5)
+
+                if busted(dealer_cards):
+                    prompt('The dealer busted! You won!')
+                    time.sleep(1.5)
                     break
+                else:
+                    prompt('The dealer stayed.')
+                    time.sleep(1.5)
+                    display_totals(player_cards, dealer_cards)
+                    display_winner(player_cards, dealer_cards)
+                    time.sleep(1.5)
+                    break
+
+        prompt('Play again? (y or n)')
+        answer = get_valid_answer(['y', 'n'])
+        if answer == 'n':
+            break
 
 
     prompt('Thanks for playing twenty one!')
