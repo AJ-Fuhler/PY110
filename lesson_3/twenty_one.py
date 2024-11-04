@@ -63,7 +63,7 @@ def display_dealer_cards(dealer_cards, hidden=True):
     if hidden:
         prompt(f'Dealer has: {dealer_card_vals[0]} and unknown card')
     else:
-        prompt(f'Dealer has: {join_or(dealer_card_vals, ', ', 'and')}')
+        prompt(f"Dealer has: {join_or(dealer_card_vals, ', ', 'and')}")
 
 
 
